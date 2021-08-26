@@ -30,6 +30,7 @@ import (
 	"github.com/smacker/go-tree-sitter/toml"
 	"github.com/smacker/go-tree-sitter/typescript/tsx"
 	"github.com/smacker/go-tree-sitter/typescript/typescript"
+	"github.com/smacker/go-tree-sitter/yaml"
 )
 
 const (
@@ -69,7 +70,7 @@ var languages = map[string]func() *sitter.Language{
 	"toml":       toml.GetLanguage,
 	"typescript": typescript.GetLanguage,
 	"tsx":        tsx.GetLanguage,
-	//"yaml":       yaml.GetLanguage,
+	"yaml":       yaml.GetLanguage,
 }
 
 var keywords = []string{"class", "this", "else", "return", "var", "const", "let", "for", "while", "if", "try", "throw", "catch", "function", "next", "continue", "break", "of", "in", "new"}

@@ -19,14 +19,12 @@ call s:prop_type_add('tsv_8', {'highlight': 'Error'})
 call s:prop_type_add('tsv_9', {'highlight': 'Comment'})
 
 function treesittervim#handle(ch, msg) abort
-    echomsg 1111
   let l:ln = 0
   for l:m in json_decode(a:msg)
     let l:ln += 1
     let l:col = 1
     let l:i = 0
     while l:i < len(l:m)
-        echomsg l:m
       let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
       let l:i += 2
       if l:c >= 2

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
-	"reflect"
 	"strings"
 
 	sitter "github.com/smacker/go-tree-sitter"
@@ -148,30 +147,6 @@ func (c *Colorizer) Start(color, row, column int) {
 func (c *Colorizer) End(row, column int) {
 	c.AdvanceTo(row, column)
 	c.colors = c.colors[1:]
-}
-
-func reduceRight(fptr interface{}, f interface{}, iv ...interface{}) error {
-	fn := reflect.ValueOf(fptr).Elem()
-	fv := reflect.ValueOf(f)
-	v := reflect.MakeFunc(fn.Type(), func(in []reflect.Value) []reflect.Value {
-		list := in[0]
-		l := list.Len()
-		start := 0
-		var r reflect.Value
-		if len(iv) > 0 {
-			r = reflect.ValueOf(iv[0])
-		} else {
-			r = list.Index(list.Len() - 1)
-			start = 1
-		}
-		for i := (l - start - 1); i >= 0; i-- {
-			v := fv.Call([]reflect.Value{r, list.Index(i)})
-			r = v[0]
-		}
-		return []reflect.Value{r}
-	})
-	fn.Set(v)
-	return nil
 }
 
 func (c *Colorizer) Render() [][]int {

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"os"
 	"strings"
 
@@ -164,6 +165,8 @@ func (c *Colorizer) Render() [][]int {
 }
 
 func main() {
+	flag.Parse()
+
 	parser := sitter.NewParser()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

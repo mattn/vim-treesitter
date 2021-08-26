@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
@@ -27,15 +26,9 @@ const (
 	NodeQuote
 	NodeBquote
 	NodeIdent
-	NodeLambda
-	NodeSpecial
-	NodeBuiltinfunc
 	NodeCell
 	NodeArray
-	NodeAref
-	NodeEnv
 	NodeError
-	NodeGoValue
 )
 
 type Node struct {
@@ -98,24 +91,6 @@ func (n *Node) String() string {
 		fmt.Fprintf(&buf, "`%v", n.car)
 	case NodeString:
 		fmt.Fprintf(&buf, "%q", n.v)
-	case NodeLambda:
-		fmt.Fprintf(&buf, "(lambda %v %v)", n.car, n.cdr.car)
-	case NodeEnv:
-		if n.car != nil {
-			fmt.Fprintf(&buf, "(defun %v %v %v)", n.v, n.car, n.cdr.car)
-		} else {
-			fmt.Fprintf(&buf, "(defun %v %v)", n.v, n.cdr.car)
-		}
-	case NodeGoValue:
-		rv, ok := n.v.(reflect.Value)
-		if ok {
-			switch rv.Kind() {
-			case reflect.String:
-				fmt.Fprintf(&buf, "%q", rv.Interface())
-			default:
-				fmt.Fprint(&buf, rv.Interface())
-			}
-		}
 	default:
 		fmt.Fprint(&buf, n.v)
 	}

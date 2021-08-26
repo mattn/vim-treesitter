@@ -11,12 +11,6 @@ $ cd server
 $ go build
 ```
 
-## Usage
-
-```
-:call treesitter#apply()
-```
-
 ## License
 
 MIT

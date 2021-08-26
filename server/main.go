@@ -180,7 +180,8 @@ func main() {
 		if !ok {
 			continue
 		}
-		parser.SetLanguage(f())
+		lang := f()
+		parser.SetLanguage(lang)
 		root := parser.Parse(nil, []byte(input[1])).RootNode()
 
 		colorizer := NewColorizer(int(root.StartPoint().Row), int(root.StartPoint().Column))
@@ -188,6 +189,7 @@ func main() {
 		var process_node func(node *sitter.Node)
 		process_node = func(node *sitter.Node) {
 			nt := node.Type()
+			//println(nt, lang.SymbolType(node.Symbol()).String())
 			types = append(types, nt)
 			color := -1
 			if nt == "program" || nt == "template_substitution" {

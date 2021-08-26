@@ -4,6 +4,19 @@ THIS IS VERY EXPERIMENTAL PLUGIN
 
 treesitter for Vim8
 
+## Installation
+
+```
+$ cd server
+$ go build
+```
+
+## Usage
+
+```
+:call treesitter#apply()
+```
+
 ## License
 
 MIT

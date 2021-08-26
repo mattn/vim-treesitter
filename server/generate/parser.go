@@ -172,12 +172,19 @@ func (p *Parser) ParseParen(bq bool) (*Node, error) {
 		}
 
 		if child.t == NodeIdent && child.v.(string) == "." && !first {
+			p.SkipWhite()
+			b, err := p.buf.Peek(1)
+			if err == io.EOF || (len(b) > 0 && b[0] == ')') {
+				break
+			}
 			child, err = p.ParseAny(false)
 			if err != nil {
+				if err == io.EOF {
+					break
+				}
 				return nil, err
 			}
 			curr.cdr = child
-			break
 		} else if head.car != nil {
 			x := &Node{
 				t: NodeCell,

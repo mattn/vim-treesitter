@@ -9,14 +9,11 @@ function! s:prop_type_add(name, attr) abort
   endif
 endfunction
 
-call s:prop_type_add('tsv_2', {'highlight': 'Operator'})
-call s:prop_type_add('tsv_3', {'highlight': 'Keyword'})
-call s:prop_type_add('tsv_4', {'highlight': 'Identifier'})
-call s:prop_type_add('tsv_5', {'highlight': 'SpecialChar'})
-call s:prop_type_add('tsv_6', {'highlight': 'String'})
-call s:prop_type_add('tsv_7', {'highlight': 'Number'})
-call s:prop_type_add('tsv_8', {'highlight': 'Error'})
-call s:prop_type_add('tsv_9', {'highlight': 'Comment'})
+let s:syntax = ['TSAnnotation', 'TSAttribute', 'TSBoolean', 'TSCharacter', 'TSComment', 'TSConditional', 'TSConstBuiltin', 'TSConstMacro', 'TSConstant', 'TSConstructor', 'TSDanger', 'TSEmphasis', 'TSEnvironment', 'TSEnvironmentName', 'TSException', 'TSField', 'TSFloat', 'TSFuncBuiltin', 'TSFuncMacro', 'TSFunction', 'TSInclude', 'TSKeyword', 'TSKeywordFunction', 'TSKeywordOperator', 'TSKeywordReturn', 'TSLabel', 'TSLiteral', 'TSMath', 'TSMethod', 'TSNamespace', 'TSNone', 'TSNote', 'TSNumber', 'TSOperator', 'TSParameter', 'TSParameterReference', 'TSProperty', 'TSPunctBracket', 'TSPunctDelimiter', 'TSPunctSpecial', 'TSRepeat', 'TSStrike', 'TSString', 'TSStringEscape', 'TSStringRegex', 'TSStringSpecial', 'TSStrong', 'TSSymbol', 'TSTag', 'TSTagAttribute', 'TSTagDelimiter', 'TSText', 'TSTextReference', 'TSTitle', 'TSType', 'TSTypeBuiltin', 'TSURI', 'TSUnderline', 'TSVariableBuiltin', 'TSWarning']
+for s:s in s:syntax
+  call s:prop_type_add(s:s, {'highlight': s:s})
+endfor
+unlet s:s
 
 function treesittervim#handle(ch, msg) abort
   let l:ln = 0
@@ -27,8 +24,8 @@ function treesittervim#handle(ch, msg) abort
     while l:i < len(l:m)
       let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
       let l:i += 2
-      if l:c >= 2
-        call prop_add(l:ln, l:col, {'length': l:s, 'type': 'tsv_' . l:c})
+      if index(s:syntax, l:c) != -1
+        call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
       endif
       let l:col += l:s
     endwhile
@@ -36,7 +33,7 @@ function treesittervim#handle(ch, msg) abort
 endfunc
 
 function! s:clear() abort
-  for l:v in ['tsv_2', 'tsv_3', 'tsv_4', 'tsv_5', 'tsv_6', 'tsv_7', 'tsv_8', 'tsv_9']
+  for l:v in s:syntax
     while 1
       let l:prop = prop_find({'type': l:v})
       if empty(l:prop)

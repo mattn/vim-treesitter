@@ -1,5 +1,7 @@
 package main
 
+//go:generate go run generate/main.go generate/parser.go -o highlight.go
+
 import (
 	"bufio"
 	"encoding/json"
@@ -74,9 +76,6 @@ var languages = map[string]func() *sitter.Language{
 	"yaml":       yaml.GetLanguage,
 }
 
-var keywords = []string{"class", "this", "else", "return", "var", "const", "let", "for", "while", "if", "try", "throw", "catch", "function", "next", "continue", "break", "of", "in", "new"}
-var symbols = []string{"%", "(", ")", "[", "]", "{", "}", ",", "-", "+", ";", ".", "/", "=", "==", "===", "&&", "&", "|", "||", "<", "!=", "<=", "<=", ">=", "<=>", "=>", "\"", "'", "`", "${", "~", "^", "*", "**", "+", "-", "%", "!"}
-
 func has(kw []string, s string) bool {
 	for _, k := range kw {
 		if k == s {
@@ -89,21 +88,21 @@ func has(kw []string, s string) bool {
 type Colorizer struct {
 	row    int
 	column int
-	colors []int
+	colors []string
 	line   *[]Line
 	lines  []*[]Line
 }
 
 type Line struct {
-	Distance int `json:"distance"`
-	Color    int `json:"color"`
+	Distance int    `json:"distance"`
+	Color    string `json:"color"`
 }
 
 func NewColorizer(row, column int) *Colorizer {
 	return &Colorizer{
 		row:    row,
 		column: column,
-		colors: []int{-1},
+		colors: []string{""},
 		line:   &[]Line{},
 		lines:  []*[]Line{},
 	}
@@ -141,9 +140,9 @@ func (c *Colorizer) AdvanceTo(row, column int) {
 	}
 }
 
-func (c *Colorizer) Start(color, row, column int) {
+func (c *Colorizer) Start(color string, row, column int) {
 	c.AdvanceTo(row, column)
-	c.colors = append([]int{color}, c.colors...)
+	c.colors = append([]string{color}, c.colors...)
 }
 
 func (c *Colorizer) End(row, column int) {
@@ -151,10 +150,10 @@ func (c *Colorizer) End(row, column int) {
 	c.colors = c.colors[1:]
 }
 
-func (c *Colorizer) Render() [][]int {
-	ret := [][]int{}
+func (c *Colorizer) Render() [][]interface{} {
+	ret := [][]interface{}{}
 	for i := 0; i < len(c.lines); i++ {
-		vv := []int{}
+		vv := []interface{}{}
 		for j := len(*(c.lines[i])) - 1; j >= 0; j-- {
 			v := (*(c.lines[i]))[j]
 			vv = append(vv, v.Color, v.Distance)
@@ -176,7 +175,8 @@ func main() {
 		if err != nil || len(input) != 2 {
 			continue
 		}
-		f, ok := languages[input[0]]
+		lname := input[0]
+		f, ok := languages[lname]
 		if !ok {
 			continue
 		}
@@ -191,30 +191,18 @@ func main() {
 			nt := node.Type()
 			//println(nt, lang.SymbolType(node.Symbol()).String())
 			types = append(types, nt)
-			color := -1
-			if nt == "program" || nt == "template_substitution" {
-				color = PLAIN
-			} else if nt == "number" {
-				color = NUMBER
-			} else if has(keywords, nt) {
-				color = KEYWORD
-			} else if has(symbols, nt) {
-				color = SYMBOL
-			} else if nt == "string" || nt == "template_string" {
-				color = STRING
-			} else if nt == "identifier" || nt == "property_identifier" {
-				color = IDENTIFIER
-			} else if nt == "escape_sequence" {
-				color = SPECIAL_CHAR
-			} else if nt == "ERROR" {
-				color = ERROR
-			} else if nt == "comment" {
-				color = COMMENT
+			color := ""
+			if lang.SymbolType(node.Symbol()) == sitter.SymbolTypeAnonymous {
+				if v, ok := keywords[lname][nt]; ok {
+					color = v
+				}
 			} else {
-				//println(nt)
+				if v, ok := symbols[lname][nt]; ok {
+					color = v
+				}
 			}
 
-			if color != -1 {
+			if color != "" {
 				colorizer.Start(color, int(node.StartPoint().Row), int(node.StartPoint().Column))
 			}
 
@@ -224,13 +212,11 @@ func main() {
 
 			types = append(types, "/"+nt)
 
-			if color != -1 {
+			if color != "" {
 				colorizer.End(int(node.EndPoint().Row), int(node.EndPoint().Column))
 			}
 		}
 		process_node(root)
-		//console.log(types.join(' '));
-		reply := colorizer.Render()
-		json.NewEncoder(os.Stdout).Encode(reply)
+		json.NewEncoder(os.Stdout).Encode(colorizer.Render())
 	}
 }

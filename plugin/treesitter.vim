@@ -1,6 +1,7 @@
 " Copied from https://github.com/nvim-treesitter/nvim-treesitter/blob/2b785889a4d0613465f72eccabd42468b345658d/plugin/nvim-treesitter.vim
 
 augroup treesitter
+  autocmd BufRead * call treesittervim#apply()
   autocmd TextChanged * call treesittervim#apply()
   if exists('##TextChangedP')
     autocmd TextChangedP * call treesittervim#apply()

@@ -1,7 +1,5 @@
-module gopls-workspace
+module github.com/mattn/vim-treesitter/server
 
-go 1.12
+go 1.17
 
-require github.com/smacker/go-tree-sitter v0.0.0-20210728070821-d2f3e69b145a
-
-replace github.com/mattn/vim-treesitter/server => C:\Users\mattn\vimfiles\plugged\vim-treesitter\server
+require github.com/smacker/go-tree-sitter v0.0.0-20210728070821-d2f3e69b145a // indirect

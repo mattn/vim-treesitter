@@ -1,4 +1,5 @@
 # github.com/smacker/go-tree-sitter v0.0.0-20210728070821-d2f3e69b145a
+## explicit; go 1.13
 github.com/smacker/go-tree-sitter
 github.com/smacker/go-tree-sitter/bash
 github.com/smacker/go-tree-sitter/c

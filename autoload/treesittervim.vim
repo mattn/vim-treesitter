@@ -49,5 +49,8 @@ let s:ch = job_getchannel(s:job)
 
 function! treesittervim#apply() abort
   call s:clear()
-  call ch_sendraw(s:ch, json_encode([&filetype, join(getline(1, '$'), "\n")]) . "\n", {'callback': "treesittervim#handle"})
+  try
+    call ch_sendraw(s:ch, json_encode([&filetype, join(getline(1, '$'), "\n")]) . "\n", {'callback': "treesittervim#handle"})
+  catch
+  endtry
 endfunction

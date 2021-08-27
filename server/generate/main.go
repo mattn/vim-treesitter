@@ -44,12 +44,15 @@ var languages = []string{
 	"csharp",
 	"css",
 	"dockerfile",
+	"ecma",
 	"elm",
 	"go",
 	"hcl",
 	"html",
+	"html_tags",
 	"java",
 	"javascript",
+	"jsx",
 	"lua",
 	"ocaml",
 	"php",
@@ -78,7 +81,8 @@ func has(m []idmap, name string) bool {
 	return false
 }
 
-func generate(l string) ([]idmap, []idmap) {
+func generate(l string) ([]idmap, []idmap, []string) {
+	log.Printf("Generating highlights for %v", l)
 	resp, err := http.Get("https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/820b4a9c211a49c878ce3f19ed5c349509e7988f/queries/" + l + "/highlights.scm")
 	if err != nil {
 		log.Fatal(err)
@@ -86,6 +90,26 @@ func generate(l string) ([]idmap, []idmap) {
 	defer resp.Body.Close()
 
 	in := bufio.NewReader(resp.Body)
+
+	var inherits []string
+	bb, err := in.Peek(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if bb[0] == ';' {
+		b, _, err := in.ReadLine()
+		if err != nil {
+			log.Fatal(err)
+		}
+		line := string(b)
+		if strings.HasPrefix(line, "; inherits:") {
+			inherits = strings.Split(line[11:], ",")
+			for i, v := range inherits {
+				inherits[i] = strings.TrimSpace(v)
+			}
+			log.Println(inherits)
+		}
+	}
 	p := NewParser(in)
 
 	symbols := []idmap{}
@@ -162,7 +186,7 @@ func generate(l string) ([]idmap, []idmap) {
 		prev = n
 	}
 
-	return symbols, keywords
+	return symbols, keywords, inherits
 }
 
 func main() {
@@ -181,10 +205,36 @@ func main() {
 	}
 	symbols := map[string][]idmap{}
 	keywords := map[string][]idmap{}
+	inherits := map[string][]string{}
 	for _, l := range languages {
-		s, k := generate(l)
+		s, k, i := generate(l)
 		symbols[l] = s
 		keywords[l] = k
+		inherits[l] = i
+	}
+
+	for _, l := range languages {
+		if len(inherits[l]) > 0 {
+			log.Println("Merging", inherits[l])
+			mergedSymbols := []idmap{}
+			mergedKeywords := []idmap{}
+			for _, v := range inherits[l] {
+				for _, sv := range symbols[v] {
+					mergedSymbols = append(mergedSymbols, sv)
+				}
+				for _, kw := range keywords[v] {
+					mergedKeywords = append(mergedKeywords, kw)
+				}
+			}
+			for _, sv := range symbols[l] {
+				mergedSymbols = append(mergedSymbols, sv)
+			}
+			for _, kw := range keywords[l] {
+				mergedKeywords = append(mergedKeywords, kw)
+			}
+			symbols[l] = mergedSymbols
+			keywords[l] = mergedKeywords
+		}
 	}
 
 	fmt.Fprintln(out, "package main")

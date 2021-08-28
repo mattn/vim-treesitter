@@ -15,7 +15,7 @@ for s:s in s:syntax
 endfor
 unlet s:s
 
-function treesittervim#handle(ch, msg) abort
+function! treesittervim#handle(ch, msg) abort
   let l:ln = 0
   for l:m in json_decode(a:msg)
     let l:ln += 1
@@ -25,7 +25,10 @@ function treesittervim#handle(ch, msg) abort
       let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
       let l:i += 2
       if index(s:syntax, l:c) != -1
-        call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
+        try
+          call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
+        catch
+        endtry
       endif
       let l:col += l:s
     endwhile
@@ -44,13 +47,14 @@ function! s:clear() abort
   endfor
 endfunction
 
-let s:job = job_start(s:server, {})
+let s:job = job_start(s:server, {'noblock': 1})
 let s:ch = job_getchannel(s:job)
 
 function! treesittervim#apply() abort
   call s:clear()
   try
-    call ch_sendraw(s:ch, json_encode([&filetype, join(getline(1, '$'), "\n")]) . "\n", {'callback': "treesittervim#handle"})
+    call ch_sendraw(s:ch, json_encode([&filetype, join(getline(1, '$'), "\n")]) . "\n", {'callback': 'treesittervim#handle'})
   catch
+    echomsg v:exception
   endtry
 endfunction

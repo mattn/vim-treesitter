@@ -4,10 +4,12 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"flag"
+	"io/ioutil"
+	"log"
 	"os"
-	"strings"
 
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/bash"
@@ -163,60 +165,95 @@ func (c *Colorizer) Render() [][]interface{} {
 	return ret
 }
 
+func parse(parser *sitter.Parser, lname string, code string) {
+	f, ok := languages[lname]
+	if !ok {
+		return
+	}
+	lang := f()
+	parser.SetLanguage(lang)
+	root := parser.Parse(nil, []byte(code)).RootNode()
+
+	colorizer := NewColorizer(int(root.StartPoint().Row), int(root.StartPoint().Column))
+	types := []string{}
+	var process_node func(node *sitter.Node)
+	process_node = func(node *sitter.Node) {
+		nt := node.Type()
+		//println(nt, lang.SymbolType(node.Symbol()).String())
+		types = append(types, nt)
+		color := ""
+		if lang.SymbolType(node.Symbol()) == sitter.SymbolTypeAnonymous {
+			if v, ok := keywords[lname][nt]; ok {
+				color = v
+			}
+		} else {
+			if v, ok := symbols[lname][nt]; ok {
+				color = v
+			}
+		}
+
+		if color != "" {
+			colorizer.Start(color, int(node.StartPoint().Row), int(node.StartPoint().Column))
+		}
+
+		for i := 0; i < int(node.ChildCount()); i++ {
+			process_node(node.Child(i))
+		}
+
+		types = append(types, "/"+nt)
+
+		if color != "" {
+			colorizer.End(int(node.EndPoint().Row), int(node.EndPoint().Column))
+		}
+	}
+	process_node(root)
+	json.NewEncoder(os.Stdout).Encode(colorizer.Render())
+}
+
+func readLine(reader *bufio.Reader, buf *bytes.Buffer) error {
+	for {
+		b, prefix, err := reader.ReadLine()
+		if err != nil {
+			return err
+		}
+		buf.Write(b)
+		if !prefix {
+			break
+		}
+	}
+	return nil
+}
+
 func main() {
+	var ft string
+	var file string
+	flag.StringVar(&ft, "ft", "", "filetype")
+	flag.StringVar(&file, "file", "", "file")
 	flag.Parse()
 
 	parser := sitter.NewParser()
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		line := scanner.Text()
+
+	if ft != "" && file != "" {
+		b, err := ioutil.ReadFile(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		parse(parser, ft, string(b))
+		return
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		var buf bytes.Buffer
+		err := readLine(reader, &buf)
+		if err != nil {
+			break
+		}
 		var input []string
-		err := json.NewDecoder(strings.NewReader(line)).Decode(&input)
+		err = json.Unmarshal(buf.Bytes(), &input)
 		if err != nil || len(input) != 2 {
 			continue
 		}
-		lname := input[0]
-		f, ok := languages[lname]
-		if !ok {
-			continue
-		}
-		lang := f()
-		parser.SetLanguage(lang)
-		root := parser.Parse(nil, []byte(input[1])).RootNode()
-
-		colorizer := NewColorizer(int(root.StartPoint().Row), int(root.StartPoint().Column))
-		types := []string{}
-		var process_node func(node *sitter.Node)
-		process_node = func(node *sitter.Node) {
-			nt := node.Type()
-			//println(nt, lang.SymbolType(node.Symbol()).String())
-			types = append(types, nt)
-			color := ""
-			if lang.SymbolType(node.Symbol()) == sitter.SymbolTypeAnonymous {
-				if v, ok := keywords[lname][nt]; ok {
-					color = v
-				}
-			} else {
-				if v, ok := symbols[lname][nt]; ok {
-					color = v
-				}
-			}
-
-			if color != "" {
-				colorizer.Start(color, int(node.StartPoint().Row), int(node.StartPoint().Column))
-			}
-
-			for i := 0; i < int(node.ChildCount()); i++ {
-				process_node(node.Child(i))
-			}
-
-			types = append(types, "/"+nt)
-
-			if color != "" {
-				colorizer.End(int(node.EndPoint().Row), int(node.EndPoint().Column))
-			}
-		}
-		process_node(root)
-		json.NewEncoder(os.Stdout).Encode(colorizer.Render())
+		parse(parser, input[0], input[1])
 	}
 }

@@ -52,6 +52,7 @@ var languages = []string{
 	"html_tags",
 	"java",
 	"javascript",
+	"json",
 	"jsx",
 	"lua",
 	"ocaml",
@@ -157,8 +158,13 @@ func generate(l string) ([]idmap, []idmap, []string) {
 					if curr.car == nil {
 						break
 					}
-					if curr.car.t == NodeCell && curr.car.v != nil {
-						name := curr.car.v.(string)
+					if curr.car.t == NodeCell && curr.car.car != nil {
+						var name string
+						if curr.car.car.v != nil {
+							name = curr.car.car.v.(string)
+						} else {
+							name = "nil"
+						}
 						if !has(symbols, name) {
 							symbols = append(symbols, idmap{
 								Name:  name,

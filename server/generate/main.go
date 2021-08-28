@@ -226,17 +226,25 @@ func main() {
 			mergedKeywords := []idmap{}
 			for _, v := range inherits[l] {
 				for _, sv := range symbols[v] {
-					mergedSymbols = append(mergedSymbols, sv)
+					if !has(mergedSymbols, sv.Name) {
+						mergedSymbols = append(mergedSymbols, sv)
+					}
 				}
 				for _, kw := range keywords[v] {
-					mergedKeywords = append(mergedKeywords, kw)
+					if !has(mergedKeywords, kw.Name) {
+						mergedKeywords = append(mergedKeywords, kw)
+					}
 				}
 			}
 			for _, sv := range symbols[l] {
-				mergedSymbols = append(mergedSymbols, sv)
+				if !has(mergedSymbols, sv.Name) {
+					mergedSymbols = append(mergedSymbols, sv)
+				}
 			}
 			for _, kw := range keywords[l] {
-				mergedKeywords = append(mergedKeywords, kw)
+				if !has(mergedKeywords, kw.Name) {
+					mergedKeywords = append(mergedKeywords, kw)
+				}
 			}
 			symbols[l] = mergedSymbols
 			keywords[l] = mergedKeywords

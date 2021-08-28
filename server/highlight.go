@@ -61,8 +61,6 @@ var symbols = map[string]map[string]string {
 		"operator_name": "TSFunction",
 		"this": "TSVariableBuiltin",
 		"nullptr": "TSConstant",
-		"true": "TSBoolean",
-		"false": "TSBoolean",
 		"raw_string_literal": "TSString",
 		"auto": "TSKeyword",
 		"attribute": "TSAttribute",

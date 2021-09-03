@@ -61,6 +61,7 @@ function! treesittervim#apply() abort
       if !empty(l:syntax)
         let &l:syntax = l:syntax
         let b:treesitter_syntax = ''
+        call s:clear()
       endif
       return
     endif

@@ -16,6 +16,11 @@ endfor
 unlet s:s
 
 function! treesittervim#handle(ch, msg) abort
+  if &l:syntax != ''
+    let b:treesitter_syntax = &l:syntax
+    let &l:syntax = ''
+  endif
+  call s:clear()
   let l:ln = 0
   for l:m in json_decode(a:msg)
     let l:ln += 1
@@ -24,12 +29,10 @@ function! treesittervim#handle(ch, msg) abort
     while l:i < len(l:m)
       let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
       let l:i += 2
-      if index(s:syntax, l:c) != -1
-        try
-          call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
-        catch
-        endtry
-      endif
+      try
+        call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
+      catch
+      endtry
       let l:col += l:s
     endwhile
   endfor
@@ -51,10 +54,24 @@ let s:job = job_start(s:server, {'noblock': 1})
 let s:ch = job_getchannel(s:job)
 
 function! treesittervim#apply() abort
-  call s:clear()
   try
-    call ch_sendraw(s:ch, json_encode([&filetype, join(getline(1, '$'), "\n")]) . "\n", {'callback': 'treesittervim#handle'})
+    let l:lines = join(getline(1, '$'), "\n")
+    if len(l:lines) >= get(b:, 'treesittervim_max_bytes', 50000)
+      let l:syntax = get(b:, 'treesitter_syntax', '')
+      if !empty(l:syntax)
+        let &l:syntax = l:syntax
+        let b:treesitter_syntax = ''
+      endif
+      return
+    endif
+    call ch_sendraw(s:ch, json_encode([&filetype, l:lines]) . "\n", {'callback': 'treesittervim#handle'})
   catch
     echomsg v:exception
   endtry
+endfunction
+
+let s:timer = 0
+function! treesittervim#fire() abort
+    call timer_stop(s:timer)
+    let s:timer = timer_start(100, {t -> treesittervim#apply() })
 endfunction

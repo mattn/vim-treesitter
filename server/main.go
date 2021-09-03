@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -51,6 +52,7 @@ const (
 	COMMENT      = 9
 )
 
+var debug bool
 var languages = map[string]func() *sitter.Language{
 	"bash":       bash.GetLanguage,
 	"c":          c.GetLanguage,
@@ -179,6 +181,9 @@ func parse(parser *sitter.Parser, lname string, code string) {
 	var process_node func(node *sitter.Node)
 	process_node = func(node *sitter.Node) {
 		nt := node.Type()
+		if debug {
+			fmt.Println(nt)
+		}
 		//println(nt, lang.SymbolType(node.Symbol()).String())
 		types = append(types, nt)
 		color := ""
@@ -227,6 +232,7 @@ func readLine(reader *bufio.Reader, buf *bytes.Buffer) error {
 func main() {
 	var ft string
 	var file string
+	flag.BoolVar(&debug, "debug", false, "debug")
 	flag.StringVar(&ft, "ft", "", "filetype")
 	flag.StringVar(&file, "file", "", "file")
 	flag.Parse()

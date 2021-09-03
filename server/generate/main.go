@@ -173,7 +173,7 @@ func generate(l string) ([]idmap, []idmap, []string) {
 						}
 					} else if curr.car.t == NodeString {
 						name := curr.car.v.(string)
-						if has(keywords, name) {
+						if !has(keywords, name) {
 							keywords = append(keywords, idmap{
 								Name:  name,
 								Color: "TS" + camel(n.v.(string)[1:]),

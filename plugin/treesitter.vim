@@ -2,10 +2,12 @@
 
 augroup treesitter
   au!
-  autocmd BufRead * call treesittervim#fire()
-  autocmd TextChanged * call treesittervim#fire()
+  autocmd BufRead * call treesittervim#fire(1)
+  autocmd CursorMoved * call treesittervim#fire(0)
+  autocmd CursorMovedI * call treesittervim#fire(0)
+  autocmd TextChanged * call treesittervim#fire(1)
   if exists('##TextChangedP')
-    autocmd TextChangedP * call treesittervim#fire()
+    autocmd TextChangedP * call treesittervim#fire(1)
   endif
 augroup END
 

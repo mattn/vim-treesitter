@@ -21,6 +21,7 @@ function! treesittervim#handle(ch, msg) abort
     let &l:syntax = ''
   endif
   call s:clear()
+  let l:info = getwininfo()[0]
   let l:ln = 0
   for l:m in json_decode(a:msg)
     let l:ln += 1
@@ -30,7 +31,9 @@ function! treesittervim#handle(ch, msg) abort
       let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
       let l:i += 2
       try
-        call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
+        if l:info['topline']-100 <= l:ln && l:ln <= l:info['botline']+100
+          call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
+        endif
       catch
       endtry
       let l:col += l:s
@@ -56,7 +59,7 @@ let s:ch = job_getchannel(s:job)
 function! treesittervim#apply() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    if len(l:lines) >= get(b:, 'treesittervim_max_bytes', 50000)
+    if 0 && len(l:lines) >= get(b:, 'treesittervim_max_bytes', 50000)
       let l:syntax = get(b:, 'treesitter_syntax', '')
       if !empty(l:syntax)
         let &l:syntax = l:syntax
@@ -72,7 +75,11 @@ function! treesittervim#apply() abort
 endfunction
 
 let s:timer = 0
-function! treesittervim#fire() abort
-    call timer_stop(s:timer)
-    let s:timer = timer_start(100, {t -> treesittervim#apply() })
+function! treesittervim#fire(update) abort
+  call timer_stop(s:timer)
+  if a:update || empty(get(b:, 'treesitter_msg', ''))
+    let s:timer = timer_start(0, {t -> treesittervim#apply() })
+  else
+    call treesittervim#handle(0, b:treesitter_msg)
+  endif
 endfunction

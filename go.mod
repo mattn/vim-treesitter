@@ -1,4 +1,4 @@
-module github.com/mattn/vim-treesitter/server
+module github.com/mattn/vim-treesitter
 
 go 1.17
 

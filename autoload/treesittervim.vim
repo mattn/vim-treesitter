@@ -20,11 +20,11 @@ function! treesittervim#handle_nodes(nodes) abort
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
   endif
+  echomsg 1111
+  let l:ln1 = b:treesitter_range[0]-100
+  let l:ln2 = b:treesitter_range[1]+100
   call s:clear()
-  let l:info = getwininfo()[0]
   let l:ln = 0
-  let l:begin = l:info['topline']-100
-  let l:end = l:info['botline']+100
   for l:m in a:nodes
     let l:ln += 1
     let l:col = 1
@@ -33,7 +33,7 @@ function! treesittervim#handle_nodes(nodes) abort
       let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
       let l:i += 2
       try
-        if l:begin <= l:ln && l:ln <= l:end
+        if l:ln1 <= l:ln && l:ln <= l:ln2
           call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
         endif
       catch
@@ -44,8 +44,12 @@ function! treesittervim#handle_nodes(nodes) abort
 endfunction
 
 function! treesittervim#handle(ch, msg) abort
-  let b:treesitter_nodes = json_decode(a:msg)
-  call treesittervim#handle_nodes(b:treesitter_nodes)
+  try
+    let b:treesitter_nodes = json_decode(a:msg)
+    call treesittervim#handle_nodes(b:treesitter_nodes)
+  catch
+    let b:treesitter_nodes = []
+  endtry
 endfunc
 
 function! s:clear() abort
@@ -66,15 +70,6 @@ let s:ch = job_getchannel(s:job)
 function! treesittervim#apply() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    if 0 && len(l:lines) >= get(b:, 'treesittervim_max_bytes', 50000)
-      let l:syntax = get(b:, 'treesitter_syntax', '')
-      if !empty(l:syntax)
-        let &l:syntax = l:syntax
-        let b:treesitter_syntax = ''
-        call s:clear()
-      endif
-      return
-    endif
     call ch_sendraw(s:ch, json_encode([&filetype, l:lines]) . "\n", {'callback': 'treesittervim#handle'})
   catch
     echomsg v:exception
@@ -84,9 +79,19 @@ endfunction
 let s:timer = 0
 function! treesittervim#fire(update) abort
   call timer_stop(s:timer)
+
+  let l:wininfo = getwininfo()[0]
+
   if a:update || empty(get(b:, 'treesitter_nodes', []))
+    let b:treesitter_range = [l:wininfo['topline'], l:wininfo['botline']]
     let s:timer = timer_start(0, {t -> treesittervim#apply() })
   else
+    let l:range = [l:wininfo['topline'], l:wininfo['botline']]
+    let l:cached_range = get(b:, 'treesitter_range', [-1, -1])
+    if l:cached_range == l:range
+      return
+    endif
+    let b:treesitter_range = l:range
     let s:timer = timer_start(0, {t -> treesittervim#handle_nodes(b:treesitter_nodes) })
   endif
 endfunction

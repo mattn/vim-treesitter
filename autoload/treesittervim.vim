@@ -1,4 +1,4 @@
-let s:server = fnamemodify(expand('<sfile>:h:h') . '/server/server', ':p')
+let s:server = fnamemodify(expand('<sfile>:h:h') . '/server', ':p')
 if has('win32')
   let s:server = substitute(s:server, '/', '\\', 'g')
 endif

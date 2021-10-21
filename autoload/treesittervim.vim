@@ -3,15 +3,27 @@ let s:server = fnamemodify(s:dir . '/cmd/server/server', ':p')
 if has('win32')
   let s:server = substitute(s:server, '/', '\\', 'g') . '.exe'
 endif
-if !executable(s:server)
-  let s:dir .= '/cmd/server'
-  if has('win32')
-    let s:dir = substitute(s:dir, '/', '\\', 'g')
+
+function! s:start_server() abort
+  if !executable(s:server)
+    let l:dir = s:dir . '/cmd/server'
+    if has('win32')
+      let l:dir = substitute(l:dir, '/', '\\', 'g')
+    endif
+    echohl WarningMsg | echomsg 'Building server...' | echohl None
+    sleep 1
+    exe printf('!go build -o "%s" "%s"', s:server, l:dir)
+    if v:shell_error
+      augroup treesitter
+        au!
+      augroup END
+      return 0
+    endif
   endif
-  echo system(printf('cd %s && go build', s:dir))
-  "catch
-  "endtry
-endif
+  let s:job = job_start(s:server, {'noblock': 1})
+  let s:ch = job_getchannel(s:job)
+  return 1
+endfunction
 
 function! s:prop_type_add(name, attr) abort
   if empty(prop_type_get(a:name))
@@ -73,9 +85,6 @@ function! s:clear() abort
   endfor
 endfunction
 
-let s:job = job_start(s:server, {'noblock': 1})
-let s:ch = job_getchannel(s:job)
-
 function! treesittervim#apply() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
@@ -87,6 +96,12 @@ endfunction
 
 let s:timer = 0
 function! treesittervim#fire(update) abort
+  if !exists('s:ch')
+    if !s:start_server()
+      return
+    endif
+  endif
+
   call timer_stop(s:timer)
 
   let l:wininfo = getwininfo()[0]

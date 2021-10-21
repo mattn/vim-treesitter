@@ -20,7 +20,6 @@ function! treesittervim#handle_nodes(nodes) abort
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
   endif
-  echomsg 1111
   let l:ln1 = b:treesitter_range[0]-100
   let l:ln2 = b:treesitter_range[1]+100
   call s:clear()

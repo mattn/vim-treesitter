@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/bash"
@@ -38,6 +39,12 @@ import (
 	"github.com/smacker/go-tree-sitter/typescript/typescript"
 	"github.com/smacker/go-tree-sitter/yaml"
 )
+
+const name = "server"
+
+const version = "0.0.1"
+
+var revision = "HEAD"
 
 const (
 	EOL          = 0
@@ -232,10 +239,17 @@ func readLine(reader *bufio.Reader, buf *bytes.Buffer) error {
 func main() {
 	var ft string
 	var file string
+	var showVersion bool
 	flag.BoolVar(&debug, "debug", false, "debug")
 	flag.StringVar(&ft, "ft", "", "filetype")
 	flag.StringVar(&file, "file", "", "file")
+	flag.BoolVar(&showVersion, "V", false, "Print the version")
 	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("%s %s (rev: %s/%s)\n", name, version, revision, runtime.Version())
+		return
+	}
 
 	parser := sitter.NewParser()
 

@@ -1,6 +1,16 @@
-let s:server = fnamemodify(expand('<sfile>:h:h') . '/server', ':p')
+let s:dir = expand('<sfile>:h:h')
+let s:server = fnamemodify(s:dir . '/cmd/server/server', ':p')
 if has('win32')
-  let s:server = substitute(s:server, '/', '\\', 'g')
+  let s:server = substitute(s:server, '/', '\\', 'g') . '.exe'
+endif
+if !executable(s:server)
+  let s:dir .= '/cmd/server'
+  if has('win32')
+    let s:dir = substitute(s:dir, '/', '\\', 'g')
+  endif
+  echo system(printf('cd %s && go build', s:dir))
+  "catch
+  "endtry
 endif
 
 function! s:prop_type_add(name, attr) abort

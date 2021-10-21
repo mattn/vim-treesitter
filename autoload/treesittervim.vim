@@ -15,7 +15,7 @@ for s:s in s:syntax
 endfor
 unlet s:s
 
-function! treesittervim#handle(ch, msg) abort
+function! treesittervim#handle_nodes(nodes) abort
   if &l:syntax != ''
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
@@ -23,7 +23,7 @@ function! treesittervim#handle(ch, msg) abort
   call s:clear()
   let l:info = getwininfo()[0]
   let l:ln = 0
-  for l:m in json_decode(a:msg)
+  for l:m in a:nodes
     let l:ln += 1
     let l:col = 1
     let l:i = 0
@@ -39,6 +39,11 @@ function! treesittervim#handle(ch, msg) abort
       let l:col += l:s
     endwhile
   endfor
+endfunction
+
+function! treesittervim#handle(ch, msg) abort
+  let b:treesitter_nodes = json_decode(a:msg)
+  call treesittervim#handle_nodes(b:treesitter_nodes)
 endfunc
 
 function! s:clear() abort
@@ -77,9 +82,9 @@ endfunction
 let s:timer = 0
 function! treesittervim#fire(update) abort
   call timer_stop(s:timer)
-  if a:update || empty(get(b:, 'treesitter_msg', ''))
+  if a:update || empty(get(b:, 'treesitter_nodes', []))
     let s:timer = timer_start(0, {t -> treesittervim#apply() })
   else
-    call treesittervim#handle(0, b:treesitter_msg)
+    let s:timer = timer_start(0, {t -> treesittervim#handle_nodes(b:treesitter_nodes) })
   endif
 endfunction

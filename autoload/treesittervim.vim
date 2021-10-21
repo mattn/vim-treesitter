@@ -23,6 +23,8 @@ function! treesittervim#handle_nodes(nodes) abort
   call s:clear()
   let l:info = getwininfo()[0]
   let l:ln = 0
+  let l:begin = l:info['topline']-100
+  let l:end = l:info['botline']+100
   for l:m in a:nodes
     let l:ln += 1
     let l:col = 1
@@ -31,7 +33,7 @@ function! treesittervim#handle_nodes(nodes) abort
       let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
       let l:i += 2
       try
-        if l:info['topline']-100 <= l:ln && l:ln <= l:info['botline']+100
+        if l:begin <= l:ln && l:ln <= l:end
           call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
         endif
       catch

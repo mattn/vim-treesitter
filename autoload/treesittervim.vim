@@ -48,19 +48,19 @@ function! treesittervim#handle_nodes(nodes) abort
   let l:ln = 0
   for l:m in a:nodes
     let l:ln += 1
-    let l:col = 1
-    let l:i = 0
-    while l:i < len(l:m)
-      let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
-      let l:i += 2
-      try
-        if l:ln1 <= l:ln && l:ln <= l:ln2
-          call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
-        endif
-      catch
-      endtry
-      let l:col += l:s
-    endwhile
+    if l:ln1 <= l:ln && l:ln <= l:ln2
+      let l:col = 1
+      let l:i = 0
+      while l:i < len(l:m)
+        let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
+        let l:i += 2
+        try
+            call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
+        catch
+        endtry
+        let l:col += l:s
+      endwhile
+    endif
   endfor
 endfunction
 

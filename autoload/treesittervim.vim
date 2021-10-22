@@ -4,7 +4,15 @@ if has('win32')
   let s:server = substitute(s:server, '/', '\\', 'g') . '.exe'
 endif
 
+let s:disabled = 0
 function! s:start_server() abort
+  if s:disabled
+    augroup treesitter
+      au!
+    augroup END
+    return 0
+  endif
+
   if !executable(s:server)
     let l:dir = s:dir . '/cmd/server'
     if has('win32')
@@ -12,13 +20,19 @@ function! s:start_server() abort
     endif
     echohl WarningMsg | echomsg 'Building server...' | echohl None
     sleep 1
-    exe printf('!go build -o "%s" "%s"', s:server, l:dir)
-    if v:shell_error
-      augroup treesitter
-        au!
-      augroup END
+    let s:disabled = 1
+    let l:cwd = getcwd()
+    try
+      call chdir(l:dir)
+      !go build
+    catch
+    finally
+      call chdir(l:cwd)
+    endtry
+    if !executable(s:server)
       return 0
     endif
+    let s:disabled = 0
   endif
   let s:job = job_start(s:server, {'noblock': 1})
   let s:ch = job_getchannel(s:job)

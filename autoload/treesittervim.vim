@@ -1,6 +1,3 @@
-if !has('patch-8.1.1')
-  finish
-endif
 let s:dir = expand('<sfile>:h:h')
 let s:server = fnamemodify(s:dir . '/cmd/server/server', ':p')
 if has('win32')

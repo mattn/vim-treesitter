@@ -1,5 +1,9 @@
 " Copied from https://github.com/nvim-treesitter/nvim-treesitter/blob/2b785889a4d0613465f72eccabd42468b345658d/plugin/nvim-treesitter.vim
 
+if !has('patch-8.1.1')
+  finish
+endif
+
 augroup treesitter
   au!
   autocmd BufRead * call treesittervim#fire(1)

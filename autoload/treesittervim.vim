@@ -18,9 +18,9 @@ function! s:start_server() abort
     if has('win32')
       let l:dir = substitute(l:dir, '/', '\\', 'g')
     endif
+    let s:disabled = 1
     echohl WarningMsg | echomsg 'Building server...' | echohl None
     sleep 1
-    let s:disabled = 1
     let l:cwd = getcwd()
     try
       call chdir(l:dir)

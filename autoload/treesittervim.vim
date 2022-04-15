@@ -55,6 +55,9 @@ function! treesittervim#handle_syntax_nodes(nodes) abort
   if &l:syntax != ''
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
+    if b:treesitter_range[1] < b:treesitter_range[0]
+      let b:treesitter_range[1] = b:treesitter_range[0] + b:treesitter_range[2]
+    endif
   endif
   let l:ln1 = b:treesitter_range[0] - b:treesitter_range[2] / 2
   let l:ln2 = b:treesitter_range[1] + b:treesitter_range[2] / 2

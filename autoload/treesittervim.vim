@@ -78,9 +78,23 @@ function! treesittervim#handle_syntax_nodes(nodes) abort
   endfor
 endfunction
 
-function! treesittervim#handle_syntax(ch, msg) abort
+function! treesittervim#handle(ch, msg) abort
   try
-    let b:treesitter_nodes = json_decode(a:msg)
+    let l:v = json_decode(a:msg)
+    if l:v[0] == 'version'
+      call s:handle_version(l:v[1])
+    elseif l:v[0] == 'syntax'
+      call s:handle_syntax(l:v[1])
+    elseif l:v[0] == 'textobj'
+      call s:handle_textobj(l:v[1])
+    endif
+  catch
+  endtry
+endfunction
+
+function! s:handle_syntax(value) abort
+  try
+    let b:treesitter_nodes = a:value
     call treesittervim#handle_syntax_nodes(b:treesitter_nodes)
   catch
     let b:treesitter_nodes = []
@@ -102,15 +116,15 @@ endfunction
 function! treesittervim#syntax() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    call ch_sendraw(s:ch, json_encode(['syntax', &filetype, l:lines]) . "\n", {'callback': 'treesittervim#handle_syntax'})
+    call ch_sendraw(s:ch, json_encode(['syntax', &filetype, l:lines]) . "\n", {'callback': 'treesittervim#handle'})
   catch
     echomsg v:exception
   endtry
 endfunction
 
-function! treesittervim#handle_version(ch, msg) abort
+function! s:handle_version(value) abort
   try
-    echomsg a:msg
+    echomsg a:value
   catch
   endtry
 endfunc
@@ -118,16 +132,16 @@ endfunc
 function! treesittervim#version() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    call ch_sendraw(s:ch, json_encode(['version']) . "\n", {'callback': 'treesittervim#handle_version'})
+    call ch_sendraw(s:ch, json_encode(['version']) . "\n", {'callback': 'treesittervim#handle'})
   catch
     echomsg v:exception
   endtry
 endfunction
 
-function! treesittervim#handle_textobj(ch, msg) abort
+function! s:handle_textobj(value) abort
   try
     "echomsg json_decode(a:msg)
-    echomsg a:msg
+    echomsg a:value
   catch
   endtry
 endfunc
@@ -135,7 +149,7 @@ endfunc
 function! treesittervim#textobj() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    call ch_sendraw(s:ch, json_encode(['textobj', &filetype, l:lines, '' . col('.'), '' . line('.')]) . "\n", {'callback': 'treesittervim#handle_textobj'})
+    call ch_sendraw(s:ch, json_encode(['textobj', &filetype, l:lines, '' . (col('.')+1), '' . (line('.')+1)]) . "\n", {'callback': 'treesittervim#handle'})
   catch
     echomsg v:exception
   endtry

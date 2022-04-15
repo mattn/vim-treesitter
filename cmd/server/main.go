@@ -95,6 +95,8 @@ func has(kw []string, s string) bool {
 	return false
 }
 
+type Response [2]interface{}
+
 type Point struct {
 	Row    uint32 `json:"row"`
 	Column uint32 `json:"column"`
@@ -199,9 +201,9 @@ func doTextObj(parser *sitter.Parser, lname string, code string, column uint32, 
 	}
 	node := root.NamedDescendantForPointRange(pt, pt)
 	if node == nil {
-		json.NewEncoder(os.Stdout).Encode("Not Found!")
+		json.NewEncoder(os.Stdout).Encode(Response{"textobj", "not found"})
 	} else {
-		json.NewEncoder(os.Stdout).Encode(&Node{
+		json.NewEncoder(os.Stdout).Encode(Response{"textobj", &Node{
 			Type: node.Type(),
 			Start: Point{
 				Row:    node.StartPoint().Row,
@@ -211,7 +213,7 @@ func doTextObj(parser *sitter.Parser, lname string, code string, column uint32, 
 				Row:    node.EndPoint().Row,
 				Column: node.EndPoint().Column,
 			},
-		})
+		}})
 	}
 }
 
@@ -260,7 +262,7 @@ func doSyntax(parser *sitter.Parser, lname string, code string) {
 		}
 	}
 	process_node(root)
-	json.NewEncoder(os.Stdout).Encode(colorizer.Render())
+	json.NewEncoder(os.Stdout).Encode(Response{"syntax", colorizer.Render()})
 }
 
 func readLine(reader *bufio.Reader, buf *bytes.Buffer) error {
@@ -302,7 +304,7 @@ func main() {
 			continue
 		}
 		if input[0] == "version" {
-			json.NewEncoder(os.Stdout).Encode(version)
+			json.NewEncoder(os.Stdout).Encode(Response{"version", version})
 		} else if input[0] == "syntax" && len(input) == 3 {
 			doSyntax(parser, input[1], input[2])
 		} else if input[0] == "textobj" /*&& len(input) == 5*/ {
@@ -310,7 +312,7 @@ func main() {
 			line, _ := strconv.Atoi(input[4])
 			doTextObj(parser, input[1], input[2], uint32(col), uint32(line))
 		} else {
-			json.NewEncoder(os.Stdout).Encode("invalid command")
+			json.NewEncoder(os.Stdout).Encode(Response{"error", "invalid command"})
 		}
 	}
 }

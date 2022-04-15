@@ -8,10 +8,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"runtime"
+	"strconv"
 
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/bash"
@@ -96,6 +95,17 @@ func has(kw []string, s string) bool {
 	return false
 }
 
+type Point struct {
+	Row    uint32 `json:"row"`
+	Column uint32 `json:"column"`
+}
+
+type Node struct {
+	Type  string `json:"type"`
+	Start Point  `json:"start"`
+	End   Point  `json:"end"`
+}
+
 type Colorizer struct {
 	row    int
 	column int
@@ -174,12 +184,44 @@ func (c *Colorizer) Render() [][]interface{} {
 	return ret
 }
 
-func parse(parser *sitter.Parser, lname string, code string) {
+func doTextObj(parser *sitter.Parser, lname string, code string, column uint32, row uint32) {
 	f, ok := languages[lname]
 	if !ok {
 		return
 	}
 	lang := f()
+	parser.Reset()
+	parser.SetLanguage(lang)
+	root := parser.Parse(nil, []byte(code)).RootNode()
+	pt := sitter.Point{
+		Row:    row,
+		Column: column,
+	}
+	node := root.NamedDescendantForPointRange(pt, pt)
+	if node == nil {
+		json.NewEncoder(os.Stdout).Encode("Not Found!")
+	} else {
+		json.NewEncoder(os.Stdout).Encode(&Node{
+			Type: node.Type(),
+			Start: Point{
+				Row:    node.StartPoint().Row,
+				Column: node.StartPoint().Column,
+			},
+			End: Point{
+				Row:    node.EndPoint().Row,
+				Column: node.EndPoint().Column,
+			},
+		})
+	}
+}
+
+func doSyntax(parser *sitter.Parser, lname string, code string) {
+	f, ok := languages[lname]
+	if !ok {
+		return
+	}
+	lang := f()
+	parser.Reset()
 	parser.SetLanguage(lang)
 	root := parser.Parse(nil, []byte(code)).RootNode()
 
@@ -191,7 +233,6 @@ func parse(parser *sitter.Parser, lname string, code string) {
 		if debug {
 			fmt.Println(nt)
 		}
-		//println(nt, lang.SymbolType(node.Symbol()).String())
 		types = append(types, nt)
 		color := ""
 		if lang.SymbolType(node.Symbol()) == sitter.SymbolTypeAnonymous {
@@ -237,12 +278,8 @@ func readLine(reader *bufio.Reader, buf *bytes.Buffer) error {
 }
 
 func main() {
-	var ft string
-	var file string
 	var showVersion bool
 	flag.BoolVar(&debug, "debug", false, "debug")
-	flag.StringVar(&ft, "ft", "", "filetype")
-	flag.StringVar(&file, "file", "", "file")
 	flag.BoolVar(&showVersion, "V", false, "Print the version")
 	flag.Parse()
 
@@ -252,16 +289,6 @@ func main() {
 	}
 
 	parser := sitter.NewParser()
-
-	if ft != "" && file != "" {
-		b, err := ioutil.ReadFile(file)
-		if err != nil {
-			log.Fatal(err)
-		}
-		parse(parser, ft, string(b))
-		return
-	}
-
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		var buf bytes.Buffer
@@ -271,9 +298,17 @@ func main() {
 		}
 		var input []string
 		err = json.Unmarshal(buf.Bytes(), &input)
-		if err != nil || len(input) != 2 {
+		if err != nil {
 			continue
 		}
-		parse(parser, input[0], input[1])
+		if input[0] == "version" {
+			json.NewEncoder(os.Stdout).Encode(version)
+		} else if input[0] == "syntax" && len(input) == 3 {
+			doSyntax(parser, input[1], input[2])
+		} else if input[0] == "textobj" && len(input) == 5 {
+			col, _ := strconv.Atoi(input[3])
+			line, _ := strconv.Atoi(input[4])
+			doTextObj(parser, input[1], input[2], uint32(col), uint32(line))
+		}
 	}
 }

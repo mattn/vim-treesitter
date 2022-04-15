@@ -51,7 +51,7 @@ for s:s in s:syntax
 endfor
 unlet s:s
 
-function! treesittervim#handle_nodes(nodes) abort
+function! treesittervim#handle_syntax_nodes(nodes) abort
   if &l:syntax != ''
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
@@ -78,10 +78,10 @@ function! treesittervim#handle_nodes(nodes) abort
   endfor
 endfunction
 
-function! treesittervim#handle(ch, msg) abort
+function! treesittervim#handle_syntax(ch, msg) abort
   try
     let b:treesitter_nodes = json_decode(a:msg)
-    call treesittervim#handle_nodes(b:treesitter_nodes)
+    call treesittervim#handle_syntax_nodes(b:treesitter_nodes)
   catch
     let b:treesitter_nodes = []
   endtry
@@ -99,10 +99,26 @@ function! s:clear() abort
   endfor
 endfunction
 
-function! treesittervim#apply() abort
+function! treesittervim#syntax() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    call ch_sendraw(s:ch, json_encode([&filetype, l:lines]) . "\n", {'callback': 'treesittervim#handle'})
+    call ch_sendraw(s:ch, json_encode(['syntax', &filetype, l:lines]) . "\n", {'callback': 'treesittervim#handle_syntax'})
+  catch
+    echomsg v:exception
+  endtry
+endfunction
+
+function! treesittervim#handle_textobj(ch, msg) abort
+  try
+    echomsg json_decode(a:msg)
+  catch
+  endtry
+endfunc
+
+function! treesittervim#textobj() abort
+  try
+    let l:lines = join(getline(1, '$'), "\n")
+    call ch_sendraw(s:ch, json_encode(['textobj', &filetype, l:lines, col('.'), line('.')]) . "\n", {'callback': 'treesittervim#handle_textobj'})
   catch
     echomsg v:exception
   endtry
@@ -123,13 +139,13 @@ function! treesittervim#fire(update) abort
 
   if a:update || empty(get(b:, 'treesitter_nodes', []))
     let b:treesitter_range = l:range
-    let s:timer = timer_start(0, {t -> treesittervim#apply() })
+    let s:timer = timer_start(0, {t -> treesittervim#syntax() })
   else
     let l:cached_range = get(b:, 'treesitter_range', [-1, -1, -1])
     if l:cached_range == l:range
       return
     endif
     let b:treesitter_range = l:range
-    let s:timer = timer_start(0, {t -> treesittervim#handle_nodes(b:treesitter_nodes) })
+    let s:timer = timer_start(0, {t -> treesittervim#handle_syntax_nodes(b:treesitter_nodes) })
   endif
 endfunction

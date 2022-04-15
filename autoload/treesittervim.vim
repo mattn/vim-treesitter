@@ -69,7 +69,7 @@ function! treesittervim#handle_syntax_nodes(nodes) abort
         let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
         let l:i += 2
         try
-            call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
+          call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
         catch
         endtry
         let l:col += l:s
@@ -108,9 +108,26 @@ function! treesittervim#syntax() abort
   endtry
 endfunction
 
+function! treesittervim#handle_version(ch, msg) abort
+  try
+    echomsg a:msg
+  catch
+  endtry
+endfunc
+
+function! treesittervim#version() abort
+  try
+    let l:lines = join(getline(1, '$'), "\n")
+    call ch_sendraw(s:ch, json_encode(['version']) . "\n", {'callback': 'treesittervim#handle_version'})
+  catch
+    echomsg v:exception
+  endtry
+endfunction
+
 function! treesittervim#handle_textobj(ch, msg) abort
   try
-    echomsg json_decode(a:msg)
+    "echomsg json_decode(a:msg)
+    echomsg a:msg
   catch
   endtry
 endfunc
@@ -118,7 +135,7 @@ endfunc
 function! treesittervim#textobj() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    call ch_sendraw(s:ch, json_encode(['textobj', &filetype, l:lines, col('.'), line('.')]) . "\n", {'callback': 'treesittervim#handle_textobj'})
+    call ch_sendraw(s:ch, json_encode(['textobj', &filetype, l:lines, '' . col('.'), '' . line('.')]) . "\n", {'callback': 'treesittervim#handle_textobj'})
   catch
     echomsg v:exception
   endtry

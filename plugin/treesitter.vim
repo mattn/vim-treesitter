@@ -6,7 +6,7 @@ endif
 
 augroup treesitter
   au!
-  autocmd BufRead * call treesittervim#fire(1)
+  autocmd FileType * call treesittervim#fire(1)
   autocmd CursorMoved * call treesittervim#fire(0)
   autocmd CursorMovedI * call treesittervim#fire(0)
   autocmd TextChanged * call treesittervim#fire(1)

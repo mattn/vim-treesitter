@@ -305,10 +305,12 @@ func main() {
 			json.NewEncoder(os.Stdout).Encode(version)
 		} else if input[0] == "syntax" && len(input) == 3 {
 			doSyntax(parser, input[1], input[2])
-		} else if input[0] == "textobj" && len(input) == 5 {
+		} else if input[0] == "textobj" /*&& len(input) == 5*/ {
 			col, _ := strconv.Atoi(input[3])
 			line, _ := strconv.Atoi(input[4])
 			doTextObj(parser, input[1], input[2], uint32(col), uint32(line))
+		} else {
+			json.NewEncoder(os.Stdout).Encode("invalid command")
 		}
 	}
 }

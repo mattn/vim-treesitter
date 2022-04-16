@@ -143,8 +143,9 @@ endfunction
 
 function! s:handle_textobj(value) abort
   try
-    "echomsg json_decode(a:msg)
-    echomsg a:value
+    call cursor(a:value['start'].row+1, a:value['start'].column)
+    normal v
+    call cursor(a:value['end'].row+1, a:value['end'].column+1)
   catch
   endtry
 endfunc
@@ -152,7 +153,7 @@ endfunc
 function! treesittervim#textobj() abort
   try
     let l:lines = join(getline(1, '$'), "\n")
-    call ch_sendraw(s:ch, json_encode(['textobj', &filetype, l:lines, '' . (col('.')+1), '' . (line('.')+1)]) . "\n", {'callback': 'treesittervim#handle'})
+    call ch_sendraw(s:ch, json_encode(['textobj', &filetype, l:lines, '' . (col('.')-1), '' . (line('.')-1)]) . "\n", {'callback': 'treesittervim#handle'})
   catch
     echomsg v:exception
   endtry

@@ -55,13 +55,10 @@ function! treesittervim#handle_syntax_nodes(nodes) abort
   if &l:syntax != ''
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
-    if b:treesitter_range[1] < b:treesitter_range[0]
-      let b:treesitter_range[1] = b:treesitter_range[0] + b:treesitter_range[2]
-    endif
   endif
-  let l:ln1 = b:treesitter_range[0] - b:treesitter_range[2] / 2
-  let l:ln2 = b:treesitter_range[1] + b:treesitter_range[2] / 2
-  call s:clear()
+  let l:props = []
+  let l:ln1 = b:treesitter_range[0]
+  let l:ln2 = b:treesitter_range[1]
   let l:ln = 0
   for l:m in a:nodes
     let l:ln += 1
@@ -71,13 +68,17 @@ function! treesittervim#handle_syntax_nodes(nodes) abort
       while l:i < len(l:m)
         let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
         let l:i += 2
-        try
-          call prop_add(l:ln, l:col, {'length': l:s, 'type': l:c})
-        catch
-        endtry
+        call add(l:props, [l:ln, l:col, {'length': l:s, 'type': l:c}])
         let l:col += l:s
       endwhile
     endif
+  endfor
+  call s:clear()
+  for l:prop in l:props
+    try
+      call prop_add(l:prop[0], l:prop[1], l:prop[2])
+    catch
+    endtry
   endfor
 endfunction
 
@@ -168,15 +169,15 @@ function! treesittervim#fire(update) abort
   endif
 
   call timer_stop(s:timer)
-
   let l:wininfo = getwininfo()[0]
-  let l:range = [l:wininfo['topline'], l:wininfo['botline'], l:wininfo['height']]
+  let l:v = [l:wininfo['topline'], l:wininfo['height']]
+  let l:range = [l:v[0]-l:v[1], l:v[0]+l:v[1]*2]
 
   if a:update || empty(get(b:, 'treesitter_nodes', []))
     let b:treesitter_range = l:range
     let s:timer = timer_start(0, {t -> treesittervim#syntax() })
   else
-    let l:cached_range = get(b:, 'treesitter_range', [-1, -1, -1])
+    let l:cached_range = get(b:, 'treesitter_range', [-1, -1])
     if l:cached_range == l:range
       return
     endif

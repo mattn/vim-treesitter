@@ -51,34 +51,22 @@ for s:s in s:syntax
 endfor
 unlet s:s
 
-function! treesittervim#handle_syntax_nodes(nodes) abort
+function! treesittervim#redraw() abort
   if &l:syntax != ''
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
   endif
-  let l:props = []
+
   let l:ln1 = b:treesitter_range[0]
   let l:ln2 = b:treesitter_range[1]
-  let l:ln = 0
-  for l:m in a:nodes
-    let l:ln += 1
-    if l:ln1 <= l:ln && l:ln <= l:ln2
-      let l:col = 1
-      let l:i = 0
-      while l:i < len(l:m)
-        let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
-        let l:i += 2
-        call add(l:props, [l:ln, l:col, {'length': l:s, 'type': l:c}])
-        let l:col += l:s
-      endwhile
-    endif
-  endfor
   call s:clear()
-  for l:prop in l:props
-    try
-      call prop_add(l:prop[0], l:prop[1], l:prop[2])
-    catch
-    endtry
+  for l:prop in b:treesitter_props
+    if l:ln1 <= l:ln && l:ln <= l:ln2
+      try
+        call prop_add(l:prop[0], l:prop[1], l:prop[2])
+      catch
+      endtry
+    endif
   endfor
 endfunction
 
@@ -97,12 +85,21 @@ function! treesittervim#handle(ch, msg) abort
 endfunction
 
 function! s:handle_syntax(value) abort
-  try
-    let b:treesitter_nodes = a:value
-    call treesittervim#handle_syntax_nodes(b:treesitter_nodes)
-  catch
-    let b:treesitter_nodes = []
-  endtry
+  let l:props = []
+  let l:ln = 0
+  for l:m in a:values
+    let l:ln += 1
+    let l:col = 1
+    let l:i = 0
+    while l:i < len(l:m)
+      let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
+      let l:i += 2
+      call add(l:props, [l:ln, l:col, {'length': l:s, 'type': l:c}])
+      let l:col += l:s
+    endwhile
+  endfor
+  let b:treesitter_props = l:props
+  call treesittervim#redraw()
 endfunc
 
 function! s:clear() abort
@@ -171,17 +168,12 @@ function! treesittervim#fire(update) abort
   call timer_stop(s:timer)
   let l:wininfo = getwininfo()[0]
   let l:v = [l:wininfo['topline'], l:wininfo['height']]
-  let l:range = [l:v[0]-l:v[1], l:v[0]+l:v[1]*2]
+  let l:range = [l:v[0]-l:v[1], l:v[0]+l:v[1]+l:v[1]]
 
-  if a:update || empty(get(b:, 'treesitter_nodes', []))
-    let b:treesitter_range = l:range
+  if a:update || empty(get(b:, 'treesitter_props', []))
     let s:timer = timer_start(0, {t -> treesittervim#syntax() })
   else
-    let l:cached_range = get(b:, 'treesitter_range', [-1, -1])
-    if l:cached_range == l:range
-      return
-    endif
     let b:treesitter_range = l:range
-    let s:timer = timer_start(0, {t -> treesittervim#handle_syntax_nodes(b:treesitter_nodes) })
+    let s:timer = timer_start(0, {t -> treesittervim#redraw() })
   endif
 endfunction

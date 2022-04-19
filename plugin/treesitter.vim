@@ -7,9 +7,8 @@ endif
 augroup treesitter
   au!
   autocmd FileType * call treesittervim#fire(1)
-  autocmd CursorMoved * call treesittervim#fire(0)
-  autocmd CursorMovedI * call treesittervim#fire(0)
   autocmd TextChanged * call treesittervim#fire(1)
+  autocmd SafeState * call treesittervim#fire(0)
   if exists('##TextChangedP')
     autocmd TextChangedP * call treesittervim#fire(1)
   endif

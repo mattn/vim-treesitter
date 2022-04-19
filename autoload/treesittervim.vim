@@ -57,8 +57,9 @@ function! treesittervim#redraw() abort
     let &l:syntax = ''
   endif
 
-  let l:ln1 = b:treesitter_range[0]
-  let l:ln2 = b:treesitter_range[1]
+  let l:wininfo = getwininfo()[0]
+  let l:v = [l:wininfo['topline'], l:wininfo['height']]
+  let [l:ln1, l:ln2] = [l:v[0]-l:v[1], l:v[0]+l:v[1]+l:v[1]]
   call s:clear()
   for l:prop in b:treesitter_props
     if l:ln1 <= l:ln && l:ln <= l:ln2
@@ -166,14 +167,10 @@ function! treesittervim#fire(update) abort
   endif
 
   call timer_stop(s:timer)
-  let l:wininfo = getwininfo()[0]
-  let l:v = [l:wininfo['topline'], l:wininfo['height']]
-  let l:range = [l:v[0]-l:v[1], l:v[0]+l:v[1]+l:v[1]]
 
   if a:update || empty(get(b:, 'treesitter_props', []))
     let s:timer = timer_start(0, {t -> treesittervim#syntax() })
   else
-    let b:treesitter_range = l:range
     let s:timer = timer_start(0, {t -> treesittervim#redraw() })
   endif
 endfunction

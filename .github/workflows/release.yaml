@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-unix:
-    name: Release
+    name: Release UNIX
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -37,7 +37,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-windows:
-    name: Release
+    name: Release Windows
     runs-on: windows-2019
     steps:
     - name: Checkout code

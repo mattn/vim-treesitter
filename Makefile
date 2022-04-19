@@ -18,7 +18,7 @@ install:
 
 .PHONY: show-version
 show-version: $(GOBIN)/gobump
-	@gobump show -r .
+	@gobump show -r cmd/treesitter-server
 
 $(GOBIN)/gobump:
 	@go install github.com/x-motemen/gobump/cmd/gobump@latest

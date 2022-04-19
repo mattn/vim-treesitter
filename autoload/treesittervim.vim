@@ -1,5 +1,5 @@
 let s:dir = expand('<sfile>:h:h')
-let s:server = fnamemodify(s:dir . '/cmd/server/server', ':p')
+let s:server = fnamemodify(s:dir . '/cmd/treesitter-server/treesitter-server', ':p')
 if has('win32')
   let s:server = substitute(s:server, '/', '\\', 'g') . '.exe'
 endif
@@ -14,12 +14,12 @@ function! s:start_server() abort
   endif
 
   if !executable(s:server)
-    let l:dir = s:dir . '/cmd/server'
+    let l:dir = s:dir . '/cmd/treesitter-server'
     if has('win32')
       let l:dir = substitute(l:dir, '/', '\\', 'g')
     endif
     let s:disabled = 1
-    echohl WarningMsg | echomsg 'Building server...' | echohl None
+    echohl WarningMsg | echomsg 'Building treesitter-server...' | echohl None
     sleep 1
     let l:cwd = getcwd()
     try

@@ -36,7 +36,7 @@ import (
 	"github.com/smacker/go-tree-sitter/toml"
 	"github.com/smacker/go-tree-sitter/typescript/tsx"
 	"github.com/smacker/go-tree-sitter/typescript/typescript"
-	"github.com/smacker/go-tree-sitter/yaml"
+	//"github.com/smacker/go-tree-sitter/yaml"
 )
 
 const name = "treesitter-server"

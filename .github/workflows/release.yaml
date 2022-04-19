@@ -8,60 +8,78 @@ on:
 jobs:
   release-unix:
     name: Release UNIX
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      OS: ${{ matrix.os }}
+      GO: ${{ matrix.go }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@master
-    - name: Setup Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.x
-    - name: Cross build
-      run: |
-        mkdir -p dist
-        go build -o dist/hdb-$GOOS-$GOARCH$X
-      env:
-        GOARCH: ${{ matrix.GOARCH }}
-        CGO_ENABLED: 1
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-    - name: Upload
-      run: make upload
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - if: startsWith(matrix.os, 'macos')
+        run: brew update
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Add $GOPATH/bin to $PATH
+        run: |
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          mkdir -p dist
+          go build -o dist/hdb-$GOOS-$GOARCH
+        env:
+          GOARCH: ${{ matrix.GOARCH }}
+          CGO_ENABLED: 1
+        shell: bash
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist/hdb-*
 
   release-windows:
     name: Release Windows
-    runs-on: windows-2019
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      OS: windows-latest
+      GO: ${{ matrix.go }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@master
-    - name: Setup Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.x
-    - name: Cross build
-      run: |
-        mkdir -p dist
-        go build -o dist/hdb-$GOOS-$GOARCH$X.exe
-      env:
-        GOARCH: ${{ matrix.GOARCH }}
-        CGO_ENABLED: 1
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-    - name: Upload
-      run: make upload
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: MINGW64
+          path-type: inherit
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Add $GOPATH/bin to $PATH
+        run: |
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+        shell: msys2 {0}
+
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          mkdir -p dist
+          go build -o dist/treesitter-server-$GOOS-$GOARCH.exe
+        env:
+          GOARCH: ${{ matrix.GOARCH }}
+          CGO_ENABLED: 1
+        shell: bash
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist/hdb-*

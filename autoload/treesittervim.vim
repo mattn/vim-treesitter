@@ -84,7 +84,9 @@ endfunction
 
 function! s:handle_syntax(value) abort
   let b:treesitter_proplines = a:value
-  call treesittervim#redraw()
+  let l:wininfo = getwininfo()[0]
+  let l:range = [l:wininfo['topline'], l:wininfo['topline'] + l:wininfo['height']]
+  call treesittervim#redraw(l:range)
 endfunc
 
 function! s:clear() abort

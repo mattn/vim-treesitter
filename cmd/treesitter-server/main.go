@@ -83,7 +83,7 @@ var languages = map[string]func() *sitter.Language{
 	"toml":       toml.GetLanguage,
 	"typescript": typescript.GetLanguage,
 	"tsx":        tsx.GetLanguage,
-	"yaml":       yaml.GetLanguage,
+	//"yaml":       yaml.GetLanguage,
 }
 
 func has(kw []string, s string) bool {

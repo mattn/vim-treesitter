@@ -39,7 +39,7 @@ import (
 	"github.com/smacker/go-tree-sitter/yaml"
 )
 
-const name = "server"
+const name = "treesitter-server"
 
 const version = "0.0.1"
 

@@ -8,6 +8,7 @@ augroup treesitter
   au!
   autocmd FileType * call treesittervim#fire(1)
   autocmd TextChanged * call treesittervim#fire(1)
+  autocmd TextChangedI * call treesittervim#fire(1)
   autocmd SafeState * call treesittervim#fire(0)
   if exists('##TextChangedP')
     autocmd TextChangedP * call treesittervim#fire(1)

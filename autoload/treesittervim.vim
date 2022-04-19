@@ -65,16 +65,14 @@ function! treesittervim#handle(ch, msg) abort
   endtry
 endfunction
 
-function! treesittervim#redraw() abort
+function! treesittervim#redraw(range) abort
   if &l:syntax != ''
     let b:treesitter_syntax = &l:syntax
     let &l:syntax = ''
   endif
 
-  let l:wininfo = getwininfo()[0]
-  let [l:ln1, l:ln2] = [l:wininfo['topline'], l:wininfo['topline'] + l:wininfo['height']]
   call s:clear()
-  for l:line in b:treesitter_proplines[l:ln1:l:ln2]
+  for l:line in b:treesitter_proplines[a:range[0] : a:range[1]]
     for l:prop in l:line
       try
         call prop_add(l:prop.row, l:prop.col, l:prop.attr)
@@ -144,7 +142,7 @@ function! treesittervim#textobj() abort
   endtry
 endfunction
 
-let [s:syntax_timer, s:redraw_timer] = [0, 0]
+let s:syntax_timer = 0
 function! treesittervim#fire(update) abort
   if !exists('s:ch')
     if !s:start_server()
@@ -156,8 +154,13 @@ function! treesittervim#fire(update) abort
     call timer_stop(s:syntax_timer)
     let s:syntax_timer = timer_start(0, {t -> treesittervim#syntax() })
   else
-    call timer_stop(s:redraw_timer)
-    let s:redraw_timer = timer_start(0, {t -> treesittervim#redraw() })
-    "call treesittervim#redraw()
+    let l:wininfo = getwininfo()[0]
+    let l:range = [l:wininfo['topline'], l:wininfo['topline'] + l:wininfo['height']]
+    let cache_range = get(b:, 'treesitter_range', [-1, -1])
+    if l:range ==# l:cache_range
+      return
+    endif
+    let b:treesitter_range = l:range
+    call treesittervim#redraw(range)
   endif
 endfunction

@@ -83,7 +83,7 @@ function! s:handle_syntax(value) abort
     let &l:syntax = ''
   endif
   let b:treesitter_proplines = a:value
-  silent unlet b:treesitter_range
+  let b:treesitter_range = [-1, -1]
   call treesittervim#fire(0)
 endfunc
 

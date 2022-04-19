@@ -171,6 +171,6 @@ function! treesittervim#fire(update) abort
   if a:update || empty(get(b:, 'treesitter_proplines', []))
     let s:timer = timer_start(0, {t -> treesittervim#syntax() })
   else
-    let s:timer = timer_start(0, {t -> treesittervim#redraw() })
+    call treesittervim#redraw()
   endif
 endfunction

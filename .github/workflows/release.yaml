@@ -6,7 +6,7 @@ on:
     - 'v*'
 
 jobs:
-  release:
+  release-unix:
     name: Release
     runs-on: ubuntu-latest
     steps:
@@ -17,7 +17,42 @@ jobs:
       with:
         go-version: 1.x
     - name: Cross build
-      run: make cross
+      run: |
+        mkdir -p dist
+        go build -o dist/hdb-$GOOS-$GOARCH$X
+      env:
+        GOARCH: ${{ matrix.GOARCH }}
+        CGO_ENABLED: 1
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+    - name: Upload
+      run: make upload
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-windows:
+    name: Release
+    runs-on: windows-2019
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@master
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.x
+    - name: Cross build
+      run: |
+        mkdir -p dist
+        go build -o dist/hdb-$GOOS-$GOARCH$X.exe
+      env:
+        GOARCH: ${{ matrix.GOARCH }}
+        CGO_ENABLED: 1
     - name: Create Release
       id: create_release
       uses: actions/create-release@master

@@ -61,14 +61,17 @@ function! treesittervim#redraw() abort
   let l:v = [l:wininfo['topline'], l:wininfo['height']]
   let [l:ln1, l:ln2] = [l:v[0]-l:v[1], l:v[0]+l:v[1]+l:v[1]]
   call s:clear()
-  for l:prop in b:treesitter_props
-    if l:ln1 <= l:ln && l:ln <= l:ln2
+  "echomsg 11
+  let l:props = b:treesitter_props
+  for l:prop in l:props
+    if l:ln1 <= l:prop[0] && l:prop[0] <= l:ln2
       try
         call prop_add(l:prop[0], l:prop[1], l:prop[2])
       catch
       endtry
     endif
   endfor
+  "echomsg 22
 endfunction
 
 function! treesittervim#handle(ch, msg) abort
@@ -88,7 +91,7 @@ endfunction
 function! s:handle_syntax(value) abort
   let l:props = []
   let l:ln = 0
-  for l:m in a:values
+  for l:m in a:value
     let l:ln += 1
     let l:col = 1
     let l:i = 0
@@ -99,6 +102,7 @@ function! s:handle_syntax(value) abort
       let l:col += l:s
     endwhile
   endfor
+  echomsg 00
   let b:treesitter_props = l:props
   call treesittervim#redraw()
 endfunc
@@ -142,9 +146,9 @@ endfunction
 
 function! s:handle_textobj(value) abort
   try
-    call cursor(a:value['start'].row+1, a:value['start'].column)
+    call cursor(a:value['start'].row+1, a:value['start'].column+1)
     normal v
-    call cursor(a:value['end'].row+1, a:value['end'].column+1)
+    call cursor(a:value['end'].row+1, a:value['end'].column)
   catch
   endtry
 endfunc
@@ -166,11 +170,11 @@ function! treesittervim#fire(update) abort
     endif
   endif
 
-  call timer_stop(s:timer)
-
   if a:update || empty(get(b:, 'treesitter_props', []))
+    call timer_stop(s:timer)
     let s:timer = timer_start(0, {t -> treesittervim#syntax() })
   else
     let s:timer = timer_start(0, {t -> treesittervim#redraw() })
+    "call treesittervim#redraw()
   endif
 endfunction

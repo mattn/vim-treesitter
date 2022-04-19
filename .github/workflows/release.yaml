@@ -6,28 +6,16 @@ on:
     - 'v*'
 
 jobs:
-  release-unix:
-    name: Release UNIX
-    strategy:
-      matrix:
-        GOOS: ['linux', 'macos']
-        GOARCH: ['amd64']
-        os: ['ubuntu-latest', 'macos-latest']
-        go: ['1.18']
-    runs-on: ${{ matrix.os }}
+  release-linux:
+    name: Release Linux
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-    env:
-      OS: ${{ matrix.os }}
-      GO: ${{ matrix.go }}
     steps:
-      - if: startsWith(matrix.os, 'macos')
-        run: brew update
-
       - uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go }}
+          go-version: '1.18'
 
       - name: Add $GOPATH/bin to $PATH
         run: |
@@ -36,12 +24,12 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build
+        env:
+          GOARCH: 'amd64'
+          CGO_ENABLED: 1
         run: |
           mkdir -p dist
-          go build -o dist/treesitter-server-$GOOS-$GOARCH ./cmd/treesitter-server
-        env:
-          GOARCH: ${{ matrix.GOARCH }}
-          CGO_ENABLED: 1
+          go build -o dist/treesitter-server-linux-amd64 ./cmd/treesitter-server
         shell: bash
 
       - name: Create Release
@@ -58,21 +46,45 @@ jobs:
           name: dist
           path: dist/treesitter-server-*
 
-  release-windows:
-    name: Release Windows
-    strategy:
-      matrix:
-        GOOS: ['windows']
-        GOARCH: ['amd64']
-        os: ['windows-latest']
-        go: ['1.18']
-    runs-on: ${{ matrix.os }}
+  release-macos:
+    name: Release macOS
+    runs-on: macos-latest
     defaults:
       run:
         shell: bash
-    env:
-      OS: ${{ matrix.os }}
-      GO: ${{ matrix.go }}
+    steps:
+      - run: brew update
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.18'
+
+      - name: Add $GOPATH/bin to $PATH
+        run: |
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          mkdir -p dist
+          go build -o dist/treesitter-server-macos-amd64 ./cmd/treesitter-server
+        env:
+          GOARCH: 'amd64'
+          CGO_ENABLED: 1
+        shell: bash
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist/treesitter-server-*
+
+  release-windows:
+    name: Release Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -82,7 +94,7 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go }}
+          go-version: '1.18'
 
       - name: Add $GOPATH/bin to $PATH
         run: |
@@ -94,9 +106,9 @@ jobs:
       - name: Build
         run: |
           mkdir -p dist
-          go build -o dist/treesitter-server-$GOOS-$GOARCH.exe ./cmd/treesitter-server
+          go build -o dist/treesitter-server-windows-amd64.exe ./cmd/treesitter-server
         env:
-          GOARCH: ${{ matrix.GOARCH }}
+          GOARCH: 'amd64'
           CGO_ENABLED: 1
         shell: bash
 

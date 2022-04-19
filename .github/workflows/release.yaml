@@ -73,7 +73,7 @@ jobs:
       - name: Build
         run: |
           mkdir -p dist
-          go build -o dist/treesitter-server-$GOOS-$GOARCH.exe
+          go build -o dist/treesitter-server-$GOOS-$GOARCH.exe ./cmd/treesitter-server
         env:
           GOARCH: ${{ matrix.GOARCH }}
           CGO_ENABLED: 1

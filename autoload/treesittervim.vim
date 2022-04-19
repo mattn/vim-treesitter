@@ -66,11 +66,6 @@ function! treesittervim#handle(ch, msg) abort
 endfunction
 
 function! treesittervim#redraw(range) abort
-  if &l:syntax != ''
-    let b:treesitter_syntax = &l:syntax
-    let &l:syntax = ''
-  endif
-
   call s:clear()
   for l:line in b:treesitter_proplines[a:range[0] : a:range[1]]
     for l:prop in l:line
@@ -83,6 +78,10 @@ function! treesittervim#redraw(range) abort
 endfunction
 
 function! s:handle_syntax(value) abort
+  if &l:syntax != ''
+    let b:treesitter_syntax = &l:syntax
+    let &l:syntax = ''
+  endif
   let b:treesitter_proplines = a:value
   silent unlet b:treesitter_range
   call treesittervim#fire(0)
@@ -143,7 +142,6 @@ function! treesittervim#textobj() abort
   endtry
 endfunction
 
-let s:syntax_timer = 0
 function! treesittervim#fire(update) abort
   if !exists('s:ch')
     if !s:start_server()
@@ -152,8 +150,7 @@ function! treesittervim#fire(update) abort
   endif
 
   if a:update || empty(get(b:, 'treesitter_proplines', []))
-    call timer_stop(s:syntax_timer)
-    let s:syntax_timer = timer_start(0, {t -> treesittervim#syntax() })
+    call treesittervim#syntax()
   else
     let l:wininfo = getwininfo()[0]
     let l:range = [l:wininfo['topline']-1, l:wininfo['topline'] + l:wininfo['height']-1]

@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: |
           mkdir -p dist
-          go build -o dist/hdb-$GOOS-$GOARCH
+          go build -o dist/treesitter-server-$GOOS-$GOARCH ./cmd/treesitter-server
         env:
           GOARCH: ${{ matrix.GOARCH }}
           CGO_ENABLED: 1
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: dist
-          path: dist/hdb-*
+          path: dist/treesitter-server-*
 
   release-windows:
     name: Release Windows
@@ -82,4 +82,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: dist
-          path: dist/hdb-*
+          path: dist/treesitter-server-*

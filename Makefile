@@ -1,4 +1,4 @@
-BIN := cmd/treesitter-server
+BIN := treesitter-server
 VERSION := $$(make -s show-version)
 CURRENT_REVISION := $(shell git rev-parse --short HEAD)
 BUILD_LDFLAGS := "-s -w -X main.revision=$(CURRENT_REVISION)"
@@ -10,7 +10,7 @@ all: clean build
 
 .PHONY: build
 build:
-	go build -ldflags=$(BUILD_LDFLAGS) -o $(BIN) .
+	go build -ldflags=$(BUILD_LDFLAGS) -o ./cmd/$(BIN) .
 
 .PHONY: install
 install:
@@ -31,7 +31,7 @@ $(GOBIN)/ghr:
 
 .PHONY: cross
 cross: $(GOBIN)/goxz
-	@goxz -n $(BIN) -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) .
+	@goxz -n $(BIN) -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) ./cmd/$(BIN)
 
 .PHONY: test
 

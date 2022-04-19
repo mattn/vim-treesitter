@@ -144,7 +144,7 @@ function! treesittervim#textobj() abort
   endtry
 endfunction
 
-let s:timer = 0
+let [s:syntax_timer, s:redraw_timer] = [0, 0]
 function! treesittervim#fire(update) abort
   if !exists('s:ch')
     if !s:start_server()
@@ -153,9 +153,11 @@ function! treesittervim#fire(update) abort
   endif
 
   if a:update || empty(get(b:, 'treesitter_proplines', []))
-    call timer_stop(s:timer)
-    let s:timer = timer_start(0, {t -> treesittervim#syntax() })
+    call timer_stop(s:syntax_timer)
+    let s:syntax_timer = timer_start(0, {t -> treesittervim#syntax() })
   else
-    call treesittervim#redraw()
+    call timer_stop(s:redraw_timer)
+    let s:redraw_timer = timer_start(0, {t -> treesittervim#redraw() })
+    "call treesittervim#redraw()
   endif
 endfunction

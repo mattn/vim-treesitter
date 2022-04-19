@@ -41,7 +41,8 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/treesitter-server-*
@@ -74,7 +75,8 @@ jobs:
           CGO_ENABLED: 1
         shell: bash
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/treesitter-server-*
@@ -112,7 +114,8 @@ jobs:
           CGO_ENABLED: 1
         shell: bash
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/treesitter-server-*

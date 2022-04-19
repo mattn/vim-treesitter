@@ -77,7 +77,7 @@ function! treesittervim#redraw() abort
   for l:line in b:treesitter_proplines[l:ln1:l:ln2]
     for l:prop in l:line
       try
-        call prop_add(l:prop[0], l:prop[1], l:prop[2])
+        call prop_add(l:prop.row, l:prop.col, l:prop.attr)
       catch
       endtry
     endfor
@@ -85,22 +85,7 @@ function! treesittervim#redraw() abort
 endfunction
 
 function! s:handle_syntax(value) abort
-  let l:proplines = []
-  let l:ln = 0
-  for l:m in a:value
-    let l:ln += 1
-    let l:col = 1
-    let l:i = 0
-    let l:props = []
-    while l:i < len(l:m)
-      let [l:c, l:s] = [l:m[l:i],l:m[l:i+1]]
-      let l:i += 2
-      call add(l:props, [l:ln, l:col, {'length': l:s, 'type': l:c}])
-      let l:col += l:s
-    endwhile
-    call add(l:proplines, l:props)
-  endfor
-  let b:treesitter_proplines = l:proplines
+  let b:treesitter_proplines = a:value
   call treesittervim#redraw()
 endfunc
 

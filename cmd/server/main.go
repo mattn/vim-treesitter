@@ -112,13 +112,8 @@ type Colorizer struct {
 	row    int
 	column int
 	colors []string
-	line   *[]Line
-	lines  []*[]Line
-}
-
-type Line struct {
-	Distance int    `json:"distance"`
-	Color    string `json:"color"`
+	line   *[]Prop
+	lines  []*[]Prop
 }
 
 func NewColorizer(row, column int) *Colorizer {
@@ -126,27 +121,27 @@ func NewColorizer(row, column int) *Colorizer {
 		row:    row,
 		column: column,
 		colors: []string{""},
-		line:   &[]Line{},
-		lines:  []*[]Line{},
+		line:   &[]Prop{},
+		lines:  []*[]Prop{},
 	}
 }
 
-func (c *Colorizer) ExtendLine(distance int) {
-	// distance must be > 0 or EOL
+func (c *Colorizer) ExtendLine(length int) {
+	// length must be > 0 or EOL
 	if len(*c.line) == 0 {
 		c.lines = append(c.lines, c.line)
 	}
-	if len(*c.line) > 0 && (*c.line)[0].Color == c.colors[0] {
-		if distance == EOL {
-			(*c.line)[0].Distance = EOL
+	if len(*c.line) > 0 && (*c.line)[0].Attr.Type == c.colors[0] {
+		if length == EOL {
+			(*c.line)[0].Attr.Length = EOL
 		} else {
-			(*c.line)[0].Distance += distance
+			(*c.line)[0].Attr.Length += length
 		}
 	} else {
-		*c.line = append([]Line{{Distance: distance, Color: c.colors[0]}}, (*c.line)...)
+		*c.line = append([]Prop{{Attr: PropAttr{Length: length, Type: c.colors[0]}}}, (*c.line)...)
 	}
-	if distance == EOL {
-		c.line = &[]Line{}
+	if length == EOL {
+		c.line = &[]Prop{}
 	}
 }
 
@@ -173,17 +168,30 @@ func (c *Colorizer) End(row, column int) {
 	c.colors = c.colors[1:]
 }
 
-func (c *Colorizer) Render() [][]interface{} {
-	ret := [][]interface{}{}
+type PropAttr struct {
+	Length int    `json:"length"`
+	Type   string `json:"type"`
+}
+
+type Prop struct {
+	Row  int      `json:"row"`
+	Col  int      `json:"col"`
+	Attr PropAttr `json:"attr"`
+}
+
+func (c *Colorizer) Render() [][]Prop {
+	lines := [][]Prop{}
 	for i := 0; i < len(c.lines); i++ {
-		vv := []interface{}{}
+		props := []Prop{}
+		col := 1
 		for j := len(*(c.lines[i])) - 1; j >= 0; j-- {
 			v := (*(c.lines[i]))[j]
-			vv = append(vv, v.Color, v.Distance)
+			props = append(props, Prop{Row: i + 1, Col: col, Attr: v.Attr})
+			col += v.Attr.Length
 		}
-		ret = append(ret, vv)
+		lines = append(lines, props)
 	}
-	return ret
+	return lines
 }
 
 func doTextObj(parser *sitter.Parser, lname string, code string, column uint32, row uint32) {

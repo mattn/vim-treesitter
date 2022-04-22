@@ -152,8 +152,8 @@ function! treesittervim#fire(update) abort
   if a:update || empty(get(b:, 'treesitter_proplines', []))
     call treesittervim#syntax()
   else
-    let l:wininfo = getwininfo()[0]
-    let l:range = [l:wininfo['topline']-1, l:wininfo['topline'] + l:wininfo['height']-1]
+    let l:curpos = getcurpos()
+    let l:range = [line('w0')-1, line('w$')-1]
     let cache_range = get(b:, 'treesitter_range', [-1, -1])
     if l:range ==# l:cache_range
       return

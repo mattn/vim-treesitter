@@ -89,13 +89,7 @@ endfunc
 
 function! s:clear() abort
   for l:v in s:syntax
-    while 1
-      let l:prop = prop_find({'type': l:v})
-      if empty(l:prop)
-        break
-      endif
-      call prop_remove(l:prop)
-    endwhile
+    call prop_remove({'type': l:v, 'all': v:true})
   endfor
 endfunction
 
